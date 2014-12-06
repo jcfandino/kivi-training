@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" rel="stylesheet">
+</head>
+<title>Kivi training</title>
+
+<xmp theme="united" style="display:none;">
+
+Vamos a hacer un sitio que da informacion util acerca de gatos.
+
+# 1. Crear un recurso Rest
+
+- Crear una clase CatResource
+- Exponer en "/cat" usando la annotation @Path
+- Crear un metodo @GET que devuelva un String hardcodeado, por ejemplo:
+
+> Six-toed kittens are so common in Boston and surrounding areas of Massachusetts that experts consider it an established mutation.
+
+# 2. Hacer la frase configurable
+
+- Crear la property catPhrase en config.yaml
+- Agregar la property en KiviConf
+- Modificar el CatResource para que reciba la frase en el constructor
+
+# 3. Exponer el CatResource sin DI
+
+- En la clase KiviApp, metodo run
+- Instanciar el CatResource con la property de KiviConf
+- Registrarlo en el Framework
+
+      environment.jersey().register(catResource);
+
+- Reiniciar KiviApp la frase se podra leer en: [/cat](/cat)
+
+# 4. Exponerlo usando Spring
+
+- Eliminar el codigo agregado en el pto 3
+- Crear un metodo anotado con @Bean en KiviSpringConf
+- Instanciar y retornar el CatResource
+- Reiniciar KiviApp la frase se podra leer en: [/cat](/cat)
+- Nota que no hubo que registrar el recurso explicitamente
+
+# 5. Exponerlo usando Spring con Autowiring
+
+- Eliminar el codigo agregado en el pto 4
+- Eliminar el constructor de CatResource
+- Remplazar la property de tipo String por una de tipo KiviConf
+- Ponerle la annotation <code>@Autowired</code> a la property
+- Ponerle la annotation <code>@Service</code> a la clase
+- Reiniciar KiviApp la frase se podra leer en: [/cat](/cat)
+- Nota que ahora tampoco hubo que instanciar el recurso
+
+# 6. Delegar la obtencion de la frase a otro componente
+
+- Refactorizar el codigo para que el CatResource pida la frase al CatGuru
+- <code>CatGuru</code> debe ser una interfaz
+- <code>PropertyCatGuru</code> debe ser la implementacion, agregarle <code>@Component</code> (similar a @Service)
+- Usar Autowiring con la interfaz, no la implementacion
+- Reiniciar KiviApp la frase se podra leer en: [/cat](/cat)
+
+# 7. Crear una segunda implementacion
+
+- Igual que antes crear la clase <code>WebCatGuru</code>
+- Retornar otro string hardcodeado
+- Reiniciar la app y ver que pasa.
+
+Spring no supo cual de ambas implementaciones injectar.<br>
+Hay mas de una forma de solucionarlo, vamos a ver la mas simple
+
+- Eliminar la annotation @Component en ambas implementaciones de CatGuru
+- Crear el @Bean de CatGuru in la @Configuration (ver paso 4)
+- Instanciar el WebCatGuru
+- Reiniciar KiviApp la nueva frase se podra leer en: [/cat](/cat)
+
+# 8. Agregar una libreria al proyecto
+
+- Abrir el pom.xml y agregar la siguiente dependencia
+		<dependency>
+			<groupId>io.dropwizard</groupId>
+			<artifactId>dropwizard-client</artifactId>
+			<version>0.7.1</version>
+		</dependency>
+- Debemos regenerar nuestro proyecto de eclipse
+      mvn eclipse:eclipse
+- En el Package explorer seleccionar kivi-training y F5
+
+# 9. Usar una API web para obtener nuevos facts
+
+- Crear el modelo, CatFacts con los siguentes campos (con getters y setters):
+  - facts : <code>List&lt;String&gt;</code>
+  - success: <code>Boolean</code>
+
+- Cambiar la implementacion de WebCatGuru
+        String url = "http://catfacts-api.appspot.com/api/facts";
+        WebResource resource = client.resource(url);
+        CatFacts facts = resource.accept(MediaType.APPLICATION_JSON).get(CatFacts.class);
+        return fats.getFacts().get(0);
+- Reiniciar KiviApp, ver las nuevas frases en: [/cat](/cat)
+
+
+
+</xmp>
+
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="//strapdownjs.com/v/0.2/strapdown.js"></script>
+</html>
